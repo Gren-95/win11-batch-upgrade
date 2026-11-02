@@ -1,8 +1,19 @@
 # Windows 11 Batch Upgrade
 
+[![License: MIT](https://img.shields.io/github/license/Gren-95/win11-batch-upgrade?color=blue)](LICENSE)
+![Platform: Windows](https://img.shields.io/badge/platform-Windows-0078D6)
+![Language: Batch](https://img.shields.io/badge/language-Batch-4D4D4D)
+![Option 2: experimental](https://img.shields.io/badge/option%202-experimental-orange)
+[![Last commit](https://img.shields.io/github/last-commit/Gren-95/win11-batch-upgrade)](https://github.com/Gren-95/win11-batch-upgrade/commits/main)
+[![Stars](https://img.shields.io/github/stars/Gren-95/win11-batch-upgrade?style=flat)](https://github.com/Gren-95/win11-batch-upgrade/stargazers)
+
 A batch script that starts the Windows 11 upgrade on many PCs at once from one admin
 machine, using the Windows 11 Installation Assistant and PsExec. There is nothing to install on
 the target PCs beforehand, and you get a summary and a log of which PCs succeeded or failed.
+
+![Illustration of the script's menu and summary in a terminal window](assets/preview.svg)
+
+*Illustration of the menu and summary, with example PC names.*
 
 ## What it does
 
