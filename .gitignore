@@ -1,0 +1,9 @@
+# Downloaded separately, see README
+*.exe
+*.msi
+*.zip
+*.iso
+
+# Real computer names and results
+computers.txt
+*.log
