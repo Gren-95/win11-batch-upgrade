@@ -17,26 +17,55 @@ the target PCs beforehand, and you get a summary and a log of which PCs succeede
 
 ## What it does
 
-For each PC, one at a time, the script:
+It lists the computers and asks you to confirm, then handles each PC, one at a time:
 
-1. Pings it and skips it if it's offline.
-2. Copies PC Health Check to `C:\` and installs it silently. A failure here is only a warning.
-3. Copies the Installation Assistant to `C:\` and starts it silently as SYSTEM.
+1. Pings it and marks it as failed if it's offline.
+2. Skips it if it's already on Windows 11 or the Installation Assistant is already running.
+3. Marks it as failed if C: has too little free space, if there's no TPM 2.0, or if it starts in
+   legacy BIOS mode. If these checks can't run, it warns and carries on.
+4. Copies PC Health Check to `C:\` and installs it silently. A failure here is only a warning.
+5. Copies the Installation Assistant to `C:\`, sends a message to the logged-on user, and starts
+   the Assistant silently as SYSTEM.
 
-At the start it asks what should happen when the upgrade is ready:
+At the start it asks what to do:
 
 | Option | Behaviour | Switches |
 | --- | --- | --- |
 | **1 - Force restart** | The PC restarts by itself when ready. | `/QuietInstall /SkipEULA /AutoUpgrade /NoRestartUI` |
 | **2 - User restarts** | Asks the Assistant to wait, so the upgrade finishes on the next restart. **Experimental, see below.** | The same, plus `/NoReboot` |
+| **3 - Check status** | Changes nothing, and shows how far each PC is. | None |
+
+### Status results
+
+| Status | Meaning |
+| --- | --- |
+| `WINDOWS 11` | The upgrade is done. |
+| `INSTALLING` | The Installation Assistant is running. |
+| `WAITING FOR RESTART, OR FAILED` | The Assistant isn't running and setup files are on C:. The script can't tell these two cases apart. |
+| `NOT STARTED, OR FAILED` | The Assistant isn't running and there are no setup files on C:. |
+| `NO CONNECTION` | The PC answers ping, but PsExec couldn't read its Windows version. |
+| `OFFLINE` | The PC doesn't answer ping. |
+
+## Settings
+
+These are at the top of the script:
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `MINFREEGB` | `30` | Free space needed on C:, in GB. |
+| `MSG1` | English text | Message shown to the logged-on user with option 1. |
+| `MSG2` | English text | Message shown to the logged-on user with option 2. |
+
+Don't use double quotes or exclamation marks in the messages.
 
 ## Warnings
 
 - **Option 2 may still restart the PC by itself.** Microsoft doesn't document the Assistant's
   switches, and reports disagree on whether it can hold back the restart. Test on one spare PC
   and leave it for a few hours before using this on anyone's machine.
-- **Either option can restart a PC with no visible warning**, because the prompt is hidden and
-  the Assistant runs as SYSTEM. Unsaved work on it can be lost.
+- **Options 1 and 2 can restart a PC with no warning at the time of the restart**, because the
+  prompt is hidden and the Assistant runs as SYSTEM. The only warning is the message sent when
+  the upgrade starts, which doesn't reach a user who logs on later. Unsaved work can be lost.
 - **Running the script accepts the Windows license terms** on behalf of each PC (`/SkipEULA`).
   Make sure you are allowed to do that.
 
@@ -60,6 +89,7 @@ Run the script as a user who is a local administrator on the target PCs.
 - The `C$` admin share is reachable and PsExec can connect, which usually means File and Printer
   Sharing is allowed through the firewall.
 - It meets the [Windows 11 system requirements](https://www.microsoft.com/windows/windows-11-specifications).
+  The script checks free space, TPM 2.0 and UEFI only, not the CPU or anything else on that list.
 
 ## Usage
 
@@ -84,20 +114,21 @@ PC01
 PC02
 ```
 
-Then choose option 1 or 2 at the prompt.
+Then choose an option at the prompt.
 
 ## Results
 
-The script ends with a list of succeeded and failed PCs, and adds the same results to
-`Win11Upgrade_results.log` next to the script.
+Options 1 and 2 end with a list of succeeded, skipped and failed PCs, and add the same results
+to `Win11Upgrade_results.log` next to the script.
 
 **"Upgrade started" only means the Assistant launched without an error**, not that the upgrade
-finished or that the PC is ready to restart.
+finished or that the PC is ready to restart. Use option 3 to follow it up.
 
 ## Limitations
 
 - PCs are handled one at a time.
-- There is no check for whether a PC has finished upgrading.
+- PCs already on any Windows 11 build are skipped, so this won't move them to a newer version.
+- Running options 1 or 2 again on a PC that's waiting for its restart starts the Assistant again.
 - `C:\Windows11InstallationAssistant.exe` and `C:\WindowsPCHealthCheckSetup.msi` stay on each PC.
 
 ## Holding back the restart reliably
